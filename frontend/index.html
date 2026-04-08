@@ -28,10 +28,10 @@
     let stompClient = null;
     let currentTask = null;
 
-    const BASE_URL = "https://singletask-ai.onrender.com";
+    const BASE_URL = "https://singletask-ai.onrender.com/api/tasks";
 
     function connectWs() {
-      const socket = new SockJS(`${BASE_URL}/ws`);
+      const socket = new SockJS("https://singletask-ai.onrender.com/ws");
       stompClient = Stomp.over(socket);
       stompClient.connect({}, function () {
         stompClient.subscribe('/topic/current-task', function (message) {
@@ -60,7 +60,7 @@
       const text = input.value.trim();
       if (!text) return;
 
-      await fetch(`${BASE_URL}/tasks`, {
+      await fetch(`${BASE_URL}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text })
@@ -72,13 +72,13 @@
     async function completeTask() {
       if (!currentTask) return;
 
-      await fetch(`${BASE_URL}/tasks/${currentTask.id}/complete`, {
+      await fetch(`${BASE_URL}/${currentTask.id}/complete`, {
         method: 'POST'
       });
     }
 
     async function loadInitialTask() {
-      const res = await fetch(`${BASE_URL}/tasks/current`);
+      const res = await fetch(`${BASE_URL}/current`);
       if (res.status === 200) {
         const task = await res.json();
         updateCurrentTask(task);
