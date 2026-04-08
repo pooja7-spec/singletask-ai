@@ -25,71 +25,71 @@
   <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 
   <script>
-    let stompClient = null;
-    let currentTask = null;
+  let stompClient = null;
+  let currentTask = null;
 
-    const BASE_URL = "https://singletask-ai-1.onrender.com/api/tasks";
+  const BASE_URL = "https://singletask-ai-1.onrender.com/api/tasks";
 
-    function connectWs() {
-      const socket = new SockJS("https://singletask-ai-1.onrender.com/ws");
-      stompClient = Stomp.over(socket);
-      stompClient.connect({}, function () {
-        stompClient.subscribe('/topic/current-task', function (message) {
-          const task = message.body ? JSON.parse(message.body) : null;
-          updateCurrentTask(task);
-        });
-      });
-    }
-
-    function updateCurrentTask(task) {
-      currentTask = task;
-      const div = document.getElementById('current-task');
-      const btn = document.getElementById('completeBtn');
-
-      if (!task) {
-        div.textContent = 'No task. You are free.';
-        btn.disabled = true;
-      } else {
-        div.textContent = task.title;
-        btn.disabled = false;
-      }
-    }
-
-    async function addTask() {
-      const input = document.getElementById('taskInput');
-      const text = input.value.trim();
-      if (!text) return;
-
-      await fetch(`${BASE_URL}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text })
-      });
-
-      input.value = '';
-    }
-
-    async function completeTask() {
-      if (!currentTask) return;
-
-      await fetch(`${BASE_URL}/${currentTask.id}/complete`, {
-        method: 'POST'
-      });
-    }
-
-    async function loadInitialTask() {
-      const res = await fetch(`${BASE_URL}/current`);
-      if (res.status === 200) {
-        const task = await res.json();
+  function connectWs() {
+    const socket = new SockJS("https://singletask-ai-1.onrender.com/ws");
+    stompClient = Stomp.over(socket);
+    stompClient.connect({}, function () {
+      stompClient.subscribe('/topic/current-task', function (message) {
+        const task = message.body ? JSON.parse(message.body) : null;
         updateCurrentTask(task);
-      } else {
-        updateCurrentTask(null);
-      }
-    }
+      });
+    });
+  }
 
-    loadInitialTask();
-    connectWs();
-  </script>
+  function updateCurrentTask(task) {
+    currentTask = task;
+    const div = document.getElementById('current-task');
+    const btn = document.getElementById('completeBtn');
+
+    if (!task) {
+      div.textContent = 'No task. You are free.';
+      btn.disabled = true;
+    } else {
+      div.textContent = task.title;
+      btn.disabled = false;
+    }
+  }
+
+  async function addTask() {
+    const input = document.getElementById('taskInput');
+    const text = input.value.trim();
+    if (!text) return;
+
+    await fetch(`${BASE_URL}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    });
+
+    input.value = '';
+  }
+
+  async function completeTask() {
+    if (!currentTask) return;
+
+    await fetch(`${BASE_URL}/${currentTask.id}/complete`, {
+      method: 'POST'
+    });
+  }
+
+  async function loadInitialTask() {
+    const res = await fetch(`${BASE_URL}/current`);
+    if (res.status === 200) {
+      const task = await res.json();
+      updateCurrentTask(task);
+    } else {
+      updateCurrentTask(null);
+    }
+  }
+
+  loadInitialTask();
+  connectWs();
+</script>
 
 </body>
 </html>
