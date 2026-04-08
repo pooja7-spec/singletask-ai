@@ -28,10 +28,10 @@
     let stompClient = null;
     let currentTask = null;
 
-    const BASE_URL = "https://singletask-ai.onrender.com/api/tasks";
+    const BASE_URL = "https://singletask-ai-1.onrender.com/api/tasks";
 
     function connectWs() {
-      const socket = new SockJS("https://singletask-ai.onrender.com/ws");
+      const socket = new SockJS("https://singletask-ai-1.onrender.com/ws");
       stompClient = Stomp.over(socket);
       stompClient.connect({}, function () {
         stompClient.subscribe('/topic/current-task', function (message) {
