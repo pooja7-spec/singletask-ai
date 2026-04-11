@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>SingleTask AI</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body { font-family: sans-serif; padding: 20px; text-align: center; }
-    input { width: 90%; padding: 10px; margin-top: 20px; }
+    input, select { width: 90%; padding: 10px; margin-top: 20px; }
     button { padding: 10px 20px; margin-top: 10px; }
     #current-task { margin-top: 40px; font-size: 22px; }
   </style>
@@ -15,80 +15,106 @@
 
   <h2>Focus on One Task</h2>
 
-  <input id="taskInput" placeholder="Type what’s in your head..." />
-  <button onclick="addTask()">Add</button>
+  <!-- Emotional State -->
+  <select id="emotionSelect" onchange="updateEmotion()">
+    <option value="neutral">How are you feeling?</option>
+    <option value="tired">Tired</option>
+    <option value="stressed">Stressed</option>
+    <option value="overwhelmed">Overwhelmed</option>
+    <option value="motivated">Motivated</option>
+  </select>
 
+  <!-- Task Input -->
+  <input id="taskInput" placeholder="Type what's in your head..." />
+  <button onclick="addTask()">Add</button>
+  <button onclick="parseTasks()">AI Parse Tasks</button>
+
+  <!-- Current Task -->
   <div id="current-task">No task yet.</div>
   <button id="completeBtn" onclick="completeTask()" disabled>Done</button>
 
-  <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+  <!-- AI Next Task -->
+  <button onclick="loadNextTask()">AI Pick Next Task</button>
 
-  <script>
-  let stompClient = null;
-  let currentTask = null;
+<script>
+const API = "https://singletask-ai-1.onrender.com/api/tasks";
 
-  const BASE_URL = "https://singletask-ai-1.onrender.com/api/tasks";
+// ---------------- EMOTION ----------------
+async function updateEmotion() {
+  const state = document.getElementById("emotionSelect").value;
+  await fetch(API + "/emotion", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ state })
+  });
+}
 
-  function connectWs() {
-    const socket = new SockJS("https://singletask-ai-1.onrender.com/ws");
-    stompClient = Stomp.over(socket);
-    stompClient.connect({}, function () {
-      stompClient.subscribe('/topic/current-task', function (message) {
-        const task = message.body ? JSON.parse(message.body) : null;
-        updateCurrentTask(task);
-      });
-    });
+// ---------------- ADD TASK ----------------
+async function addTask() {
+  const text = document.getElementById("taskInput").value;
+
+  await fetch(API, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text })
+  });
+
+  loadCurrentTask();
+}
+
+// ---------------- NLP PARSE ----------------
+async function parseTasks() {
+  const text = document.getElementById("taskInput").value;
+
+  const res = await fetch(API + "/nlp", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text })
+  });
+
+  const tasks = await res.json();
+  alert("AI Parsed Tasks:\n" + JSON.stringify(tasks, null, 2));
+}
+
+// ---------------- CURRENT TASK ----------------
+async function loadCurrentTask() {
+  const res = await fetch(API + "/current");
+  if (res.status === 204) {
+    document.getElementById("current-task").innerText = "No task yet.";
+    document.getElementById("completeBtn").disabled = true;
+    return;
   }
 
-  function updateCurrentTask(task) {
-    currentTask = task;
-    const div = document.getElementById('current-task');
-    const btn = document.getElementById('completeBtn');
+  const task = await res.json();
+  document.getElementById("current-task").innerText = task.title;
+  document.getElementById("completeBtn").disabled = false;
+}
 
-    if (!task) {
-      div.textContent = 'No task. You are free.';
-      btn.disabled = true;
-    } else {
-      div.textContent = task.title;
-      btn.disabled = false;
-    }
+// ---------------- COMPLETE TASK ----------------
+async function completeTask() {
+  const res = await fetch(API + "/current");
+  if (res.status === 204) return;
+
+  const task = await res.json();
+
+  await fetch(API + "/" + task.id + "/complete", {
+    method: "POST"
+  });
+
+  loadCurrentTask();
+}
+
+// ---------------- AI NEXT TASK ----------------
+async function loadNextTask() {
+  const res = await fetch(API + "/next");
+  if (res.status === 204) {
+    alert("No next task found.");
+    return;
   }
 
-  async function addTask() {
-    const input = document.getElementById('taskInput');
-    const text = input.value.trim();
-    if (!text) return;
-
-    await fetch(`${BASE_URL}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text })
-    });
-
-    input.value = '';
-  }
-
-  async function completeTask() {
-    if (!currentTask) return;
-
-    await fetch(`${BASE_URL}/${currentTask.id}/complete`, {
-      method: 'POST'
-    });
-  }
-
-  async function loadInitialTask() {
-    const res = await fetch(`${BASE_URL}/current`);
-    if (res.status === 200) {
-      const task = await res.json();
-      updateCurrentTask(task);
-    } else {
-      updateCurrentTask(null);
-    }
-  }
-
-  loadInitialTask();
-  connectWs();
+  const task = await res.json();
+  document.getElementById("current-task").innerText = task.title;
+}
 </script>
 
 </body>
