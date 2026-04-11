@@ -25,6 +25,19 @@ public class TaskController {
         return task;
     }
 
+    // ---------------- NLP PARSING ----------------
+    @PostMapping("/nlp")
+    public ResponseEntity<?> parseTasks(@RequestBody Map<String, String> body) {
+        return ResponseEntity.ok(taskService.parseTasks(body.get("text")));
+    }
+
+    // ---------------- EMOTION ----------------
+    @PostMapping("/emotion")
+    public ResponseEntity<?> setEmotion(@RequestBody Map<String, String> body) {
+        taskService.setEmotion(body.get("state"));
+        return ResponseEntity.ok(Map.of("status", "updated"));
+    }
+
     // ---------------- COMPLETE TASK ----------------
     @PostMapping("/{id}/complete")
     public ResponseEntity<Task> completeTask(@PathVariable String id) {
@@ -50,7 +63,7 @@ public class TaskController {
         return taskService.getAllTasks();
     }
 
-    // ---------------- GET NEXT TASK ----------------
+    // ---------------- GET NEXT TASK (AI scoring) ----------------
     @GetMapping("/next")
     public ResponseEntity<Task> getNextTask() {
         return taskService.getNextTask()

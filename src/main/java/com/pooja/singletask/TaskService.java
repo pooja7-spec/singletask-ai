@@ -1,14 +1,24 @@
 package com.pooja.singletask;
 
+import com.pooja.singletask.ai.EmotionService;
+import com.pooja.singletask.ai.GroqService;
+import com.pooja.singletask.ai.TaskScoringService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Service
+@RequiredArgsConstructor
 public class TaskService {
 
     private final List<Task> tasks = new CopyOnWriteArrayList<>();
+
+    private final GroqService groqService;
+    private final EmotionService emotionService;
+    private final TaskScoringService scoringService;
 
     // ---------------- ADD TASK ----------------
     public Task addTask(String rawText, String title) {
@@ -23,12 +33,22 @@ public class TaskService {
         return task;
     }
 
+    // ---------------- NLP PARSING ----------------
+    public List<Map<String, Object>> parseTasks(String text) {
+        return groqService.parseTasks(text);
+    }
+
+    // ---------------- EMOTION ----------------
+    public void setEmotion(String state) {
+        emotionService.setEmotion(state);
+    }
+
     // ---------------- GET ALL TASKS ----------------
     public List<Task> getAllTasks() {
         return tasks;
     }
 
-    // ---------------- GET CURRENT TASK ----------------
+    // ---------------- GET CURRENT TASK (old behavior) ----------------
     public Optional<Task> getCurrentTask() {
         return tasks.stream()
                 .filter(t -> "PENDING".equals(t.getStatus()))
@@ -36,9 +56,12 @@ public class TaskService {
                 .findFirst();
     }
 
-    // ---------------- GET NEXT TASK ----------------
+    // ---------------- GET NEXT TASK (AI scoring) ----------------
     public Optional<Task> getNextTask() {
-        return getCurrentTask();
+        return tasks.stream()
+                .filter(t -> "PENDING".equals(t.getStatus()))
+                .sorted((a, b) -> scoringService.score(b) - scoringService.score(a))
+                .findFirst();
     }
 
     // ---------------- COMPLETE TASK ----------------
