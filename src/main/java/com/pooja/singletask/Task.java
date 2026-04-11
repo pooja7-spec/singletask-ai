@@ -3,11 +3,6 @@ package com.pooja.singletask;
 import lombok.*;
 import java.time.Instant;
 
-package com.pooja.singletask;
-
-import lombok.*;
-import java.time.Instant;
-
 @Data
 @Builder
 @NoArgsConstructor
