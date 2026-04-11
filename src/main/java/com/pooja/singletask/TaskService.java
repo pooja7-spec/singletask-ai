@@ -10,6 +10,7 @@ public class TaskService {
 
     private final List<Task> tasks = new CopyOnWriteArrayList<>();
 
+    // ---------------- ADD TASK ----------------
     public Task addTask(String rawText, String title) {
         Task task = Task.builder()
                 .id(UUID.randomUUID().toString())
@@ -22,6 +23,12 @@ public class TaskService {
         return task;
     }
 
+    // ---------------- GET ALL TASKS ----------------
+    public List<Task> getAllTasks() {
+        return tasks;
+    }
+
+    // ---------------- GET CURRENT TASK ----------------
     public Optional<Task> getCurrentTask() {
         return tasks.stream()
                 .filter(t -> "PENDING".equals(t.getStatus()))
@@ -29,6 +36,12 @@ public class TaskService {
                 .findFirst();
     }
 
+    // ---------------- GET NEXT TASK ----------------
+    public Optional<Task> getNextTask() {
+        return getCurrentTask();
+    }
+
+    // ---------------- COMPLETE TASK ----------------
     public Optional<Task> completeTask(String id) {
         return tasks.stream()
                 .filter(t -> t.getId().equals(id))
