@@ -62,7 +62,7 @@ async function addTask() {
   loadCurrentTask();
 }
 
-// ---------------- AI PARSE TASKS (NEW) ----------------
+// ---------------- AI PARSE TASKS (CORRECT ENDPOINT) ----------------
 async function parseTasks() {
   const text = document.getElementById("taskInput").value;
 
@@ -72,9 +72,15 @@ async function parseTasks() {
     body: JSON.stringify({ text })
   });
 
-  const data = await res.json();   // { count: X }
+  const raw = await res.text();
+  console.log("RAW RESPONSE:", raw);
 
-  alert("AI created " + data.count + " tasks.");
+  try {
+    const data = JSON.parse(raw);
+    alert("AI created " + data.count + " tasks.");
+  } catch (e) {
+    alert("Backend error. Check console.");
+  }
 
   loadCurrentTask();
 }
