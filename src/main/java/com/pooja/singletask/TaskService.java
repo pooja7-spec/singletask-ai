@@ -20,7 +20,7 @@ public class TaskService {
     private final EmotionService emotionService;
     private final TaskScoringService scoringService;
 
-    // ---------------- ADD TASK ----------------
+    // ---------------- ADD TASK (manual) ----------------
     public Task addTask(String rawText, String title) {
         Task task = Task.builder()
                 .id(UUID.randomUUID().toString())
@@ -33,9 +33,30 @@ public class TaskService {
         return task;
     }
 
-    // ---------------- NLP PARSING ----------------
-    public List<Map<String, Object>> parseTasks(String text) {
-        return groqService.parseTasks(text);
+    // ---------------- AI PARSE TASKS ----------------
+    public List<Task> parseTasks(String text) {
+        List<Map<String, Object>> parsed = groqService.parseTasks(text);
+        List<Task> created = new ArrayList<>();
+
+        for (Map<String, Object> map : parsed) {
+            Task task = Task.builder()
+                    .id(UUID.randomUUID().toString())
+                    .rawText((String) map.get("title"))
+                    .title((String) map.get("title"))
+                    .priority((String) map.get("priority"))
+                    .difficulty((String) map.get("difficulty"))
+                    .energy((String) map.get("energy"))
+                    .duration((String) map.get("duration"))
+                    .deadline((String) map.get("deadline"))
+                    .status("PENDING")
+                    .createdAt(Instant.now())
+                    .build();
+
+            tasks.add(task);
+            created.add(task);
+        }
+
+        return created;
     }
 
     // ---------------- EMOTION ----------------
@@ -48,7 +69,7 @@ public class TaskService {
         return tasks;
     }
 
-    // ---------------- GET CURRENT TASK (old behavior) ----------------
+    // ---------------- GET CURRENT TASK ----------------
     public Optional<Task> getCurrentTask() {
         return tasks.stream()
                 .filter(t -> "PENDING".equals(t.getStatus()))
@@ -56,7 +77,7 @@ public class TaskService {
                 .findFirst();
     }
 
-    // ---------------- GET NEXT TASK (AI scoring) ----------------
+    // ---------------- AI PICK NEXT TASK ----------------
     public Optional<Task> getNextTask() {
         return tasks.stream()
                 .filter(t -> "PENDING".equals(t.getStatus()))

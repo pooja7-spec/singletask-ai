@@ -15,19 +15,52 @@ public class TaskScoringService {
     public int score(Task t) {
         int s = 0;
 
-        // Priority
-        if ("high".equalsIgnoreCase(t.getPriority())) s += 3;
-        if ("medium".equalsIgnoreCase(t.getPriority())) s += 2;
+        // ---- PRIORITY ----
+        if ("high".equalsIgnoreCase(t.getPriority())) s += 5;
+        if ("medium".equalsIgnoreCase(t.getPriority())) s += 3;
+        if ("low".equalsIgnoreCase(t.getPriority())) s += 1;
 
-        // Difficulty
-        if ("easy".equalsIgnoreCase(t.getDifficulty())) s += 2;
+        // ---- DIFFICULTY ----
+        if ("easy".equalsIgnoreCase(t.getDifficulty())) s += 3;
+        if ("medium".equalsIgnoreCase(t.getDifficulty())) s += 1;
+        if ("hard".equalsIgnoreCase(t.getDifficulty())) s -= 2;
 
-        // Emotional matching
+        // ---- ENERGY ----
+        if ("low".equalsIgnoreCase(t.getEnergy())) s += 2;
+        if ("medium".equalsIgnoreCase(t.getEnergy())) s += 1;
+        if ("high".equalsIgnoreCase(t.getEnergy())) s -= 1;
+
+        // ---- DURATION ----
+        if ("short".equalsIgnoreCase(t.getDuration())) s += 3;
+        if ("medium".equalsIgnoreCase(t.getDuration())) s += 1;
+        if ("long".equalsIgnoreCase(t.getDuration())) s -= 1;
+
+        // ---- DEADLINE ----
+        if ("today".equalsIgnoreCase(t.getDeadline())) s += 4;
+        if ("tomorrow".equalsIgnoreCase(t.getDeadline())) s += 2;
+
+        // ---- EMOTION MULTIPLIERS ----
         String emotion = emotionService.getEmotion();
 
-        if ("tired".equals(emotion) && "low".equalsIgnoreCase(t.getEnergy())) s += 3;
-        if ("stressed".equals(emotion) && "short".equalsIgnoreCase(t.getDuration())) s += 2;
-        if ("motivated".equals(emotion) && "high".equalsIgnoreCase(t.getEnergy())) s += 3;
+        if ("tired".equalsIgnoreCase(emotion)) {
+            if ("low".equalsIgnoreCase(t.getEnergy())) s += 5;
+            if ("short".equalsIgnoreCase(t.getDuration())) s += 3;
+        }
+
+        if ("stressed".equalsIgnoreCase(emotion)) {
+            if ("short".equalsIgnoreCase(t.getDuration())) s += 5;
+            if ("easy".equalsIgnoreCase(t.getDifficulty())) s += 3;
+        }
+
+        if ("overwhelmed".equalsIgnoreCase(emotion)) {
+            if ("short".equalsIgnoreCase(t.getDuration())) s += 6;
+            if ("low".equalsIgnoreCase(t.getEnergy())) s += 4;
+        }
+
+        if ("motivated".equalsIgnoreCase(emotion)) {
+            if ("high".equalsIgnoreCase(t.getPriority())) s += 6;
+            if ("hard".equalsIgnoreCase(t.getDifficulty())) s += 4;
+        }
 
         return s;
     }

@@ -25,10 +25,11 @@ public class TaskController {
         return task;
     }
 
-    // ---------------- NLP PARSING ----------------
-    @PostMapping("/nlp")
+    // ---------------- AI PARSE TASKS ----------------
+    @PostMapping("/parse")
     public ResponseEntity<?> parseTasks(@RequestBody Map<String, String> body) {
-        return ResponseEntity.ok(taskService.parseTasks(body.get("text")));
+        List<Task> created = taskService.parseTasks(body.get("text"));
+        return ResponseEntity.ok(Map.of("count", created.size()));
     }
 
     // ---------------- EMOTION ----------------
@@ -63,7 +64,7 @@ public class TaskController {
         return taskService.getAllTasks();
     }
 
-    // ---------------- GET NEXT TASK (AI scoring) ----------------
+    // ---------------- AI PICK NEXT TASK ----------------
     @GetMapping("/next")
     public ResponseEntity<Task> getNextTask() {
         return taskService.getNextTask()
