@@ -38,19 +38,18 @@
 
 <script>
 const API = "https://singletask-ai-1.onrender.com/api/tasks";
-const AI  = "https://singletask-ai-1.onrender.com/api/ai";
 
 // ---------------- EMOTION ----------------
 async function updateEmotion() {
   const state = document.getElementById("emotionSelect").value;
-  await fetch(AI + "/emotion", {
+  await fetch(API + "/emotion", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ state })
   });
 }
 
-// ---------------- ADD TASK ----------------
+// ---------------- ADD TASK (manual) ----------------
 async function addTask() {
   const text = document.getElementById("taskInput").value;
 
@@ -63,27 +62,19 @@ async function addTask() {
   loadCurrentTask();
 }
 
-// ---------------- NLP PARSE + AUTO-CREATE TASKS ----------------
+// ---------------- AI PARSE TASKS (NEW) ----------------
 async function parseTasks() {
   const text = document.getElementById("taskInput").value;
 
-  const res = await fetch(AI + "/parse", {
+  const res = await fetch(API + "/parse", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ text })
   });
 
-  const parsed = await res.json();
+  const data = await res.json();
+  alert("AI created " + data.count + " tasks.");
 
-  for (const t of parsed) {
-    await fetch(API, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: t.title })
-    });
-  }
-
-  alert("AI created " + parsed.length + " tasks.");
   loadCurrentTask();
 }
 
@@ -127,6 +118,3 @@ async function loadNextTask() {
   document.getElementById("current-task").innerText = task.title;
 }
 </script>
-
-</body>
-</html>
