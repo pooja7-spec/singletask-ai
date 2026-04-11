@@ -72,7 +72,8 @@ async function parseTasks() {
     body: JSON.stringify({ text })
   });
 
-  const data = await res.json();
+  const data = await res.json();   // { count: X }
+
   alert("AI created " + data.count + " tasks.");
 
   loadCurrentTask();
@@ -118,3 +119,6 @@ async function loadNextTask() {
   document.getElementById("current-task").innerText = task.title;
 }
 </script>
+
+</body>
+</html>
