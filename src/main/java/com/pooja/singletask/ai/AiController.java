@@ -14,14 +14,18 @@ public class AiController {
     private final GroqService groqService;
     private final EmotionService emotionService;
 
-    @PostMapping("/nlp")
+    // ---- NLP PARSE ----
+    @PostMapping("/parse")
     public ResponseEntity<?> parse(@RequestBody Map<String, String> body) {
-        return ResponseEntity.ok(groqService.parseTasks(body.get("text")));
+        String text = body.get("text");
+        return ResponseEntity.ok(groqService.parseTasks(text));
     }
 
+    // ---- EMOTION ----
     @PostMapping("/emotion")
     public ResponseEntity<?> setEmotion(@RequestBody Map<String, String> body) {
-        emotionService.setEmotion(body.get("state"));
+        String state = body.get("state");
+        emotionService.setEmotion(state);
         return ResponseEntity.ok(Map.of("status", "updated"));
     }
 }

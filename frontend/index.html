@@ -67,7 +67,7 @@ async function addTask() {
 async function parseTasks() {
   const text = document.getElementById("taskInput").value;
 
-  const res = await fetch(AI + "/nlp", {
+  const res = await fetch(AI + "/parse", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ text })
@@ -75,7 +75,6 @@ async function parseTasks() {
 
   const parsed = await res.json();
 
-  // Auto-create tasks in backend
   for (const t of parsed) {
     await fetch(API, {
       method: "POST",
