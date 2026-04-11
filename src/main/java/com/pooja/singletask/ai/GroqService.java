@@ -17,6 +17,7 @@ public class GroqService {
         try {
             RestTemplate rest = new RestTemplate();
 
+            // Build request
             Map<String, Object> request = new HashMap<>();
             request.put("model", "llama3-8b-8192");
             request.put("temperature", 0.2);
@@ -36,14 +37,19 @@ public class GroqService {
 
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, headers);
 
-            Map response = rest.postForObject(API_URL, entity, Map.class);
+            // Call Groq API
+            Map<String, Object> response = rest.postForObject(API_URL, entity, Map.class);
 
-            // ---- FIXED JSON CASTING ----
-            Map<String, Object> choice = (Map<String, Object>) ((List<?>) response.get("choices")).get(0);
+            // ---- SAFE JSON PARSING ----
+            List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
+            Map<String, Object> choice = choices.get(0);
+
             Map<String, Object> message = (Map<String, Object>) choice.get("message");
             String content = (String) message.get("content");
 
-            return new ObjectMapper().readValue(content, List.class);
+            // Parse JSON array returned by Groq
+            ObjectMapper mapper = new ObjectMapper();
+            return mapper.readValue(content, List.class);
 
         } catch (Exception e) {
             throw new RuntimeException("Failed to parse tasks via Groq: " + e.getMessage());
