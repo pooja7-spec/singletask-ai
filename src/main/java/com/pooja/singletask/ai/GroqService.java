@@ -19,7 +19,7 @@ public class GroqService {
 
             // Build request
             Map<String, Object> request = new HashMap<>();
-            request.put("model", "llama3-8b-8192");
+            request.put("model", "llama-3.3-70b-versatile");
             request.put("temperature", 0.2);
 
             List<Map<String, String>> messages = new ArrayList<>();
