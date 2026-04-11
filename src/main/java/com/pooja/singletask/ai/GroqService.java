@@ -38,9 +38,10 @@ public class GroqService {
 
             Map response = rest.postForObject(API_URL, entity, Map.class);
 
-            String content = (String) ((Map)((List)response.get("choices")).get(0))
-                    .get("message")
-                    .get("content");
+            // ---- FIXED JSON CASTING ----
+            Map<String, Object> choice = (Map<String, Object>) ((List<?>) response.get("choices")).get(0);
+            Map<String, Object> message = (Map<String, Object>) choice.get("message");
+            String content = (String) message.get("content");
 
             return new ObjectMapper().readValue(content, List.class);
 
