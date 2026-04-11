@@ -38,11 +38,12 @@
 
 <script>
 const API = "https://singletask-ai-1.onrender.com/api/tasks";
+const AI  = "https://singletask-ai-1.onrender.com/api/ai";
 
 // ---------------- EMOTION ----------------
 async function updateEmotion() {
   const state = document.getElementById("emotionSelect").value;
-  await fetch(API + "/emotion", {
+  await fetch(AI + "/emotion", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ state })
@@ -62,18 +63,29 @@ async function addTask() {
   loadCurrentTask();
 }
 
-// ---------------- NLP PARSE ----------------
+// ---------------- NLP PARSE + AUTO-CREATE TASKS ----------------
 async function parseTasks() {
   const text = document.getElementById("taskInput").value;
 
-  const res = await fetch(API + "/nlp", {
+  const res = await fetch(AI + "/nlp", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ text })
   });
 
-  const tasks = await res.json();
-  alert("AI Parsed Tasks:\n" + JSON.stringify(tasks, null, 2));
+  const parsed = await res.json();
+
+  // Auto-create tasks in backend
+  for (const t of parsed) {
+    await fetch(API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: t.title })
+    });
+  }
+
+  alert("AI created " + parsed.length + " tasks.");
+  loadCurrentTask();
 }
 
 // ---------------- CURRENT TASK ----------------
