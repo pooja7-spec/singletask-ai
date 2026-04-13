@@ -1,67 +1,73 @@
 package com.pooja.singletask.ai;
 
 import com.pooja.singletask.Task;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class TaskScoringService {
 
     private final EmotionService emotionService;
 
-    public TaskScoringService(EmotionService emotionService) {
-        this.emotionService = emotionService;
-    }
-
     public int score(Task t) {
-        int s = 0;
+        int score = 0;
 
-        // ---- PRIORITY ----
-        if ("high".equalsIgnoreCase(t.getPriority())) s += 5;
-        if ("medium".equalsIgnoreCase(t.getPriority())) s += 3;
-        if ("low".equalsIgnoreCase(t.getPriority())) s += 1;
+        // ---------------- BASE SCORE ----------------
+        score += switch (t.getPriority()) {
+            case "high" -> 30;
+            case "medium" -> 20;
+            default -> 10;
+        };
 
-        // ---- DIFFICULTY ----
-        if ("easy".equalsIgnoreCase(t.getDifficulty())) s += 3;
-        if ("medium".equalsIgnoreCase(t.getDifficulty())) s += 1;
-        if ("hard".equalsIgnoreCase(t.getDifficulty())) s -= 2;
+        score += switch (t.getDifficulty()) {
+            case "hard" -> 30;
+            case "medium" -> 20;
+            default -> 10;
+        };
 
-        // ---- ENERGY ----
-        if ("low".equalsIgnoreCase(t.getEnergy())) s += 2;
-        if ("medium".equalsIgnoreCase(t.getEnergy())) s += 1;
-        if ("high".equalsIgnoreCase(t.getEnergy())) s -= 1;
+        score += switch (t.getEnergy()) {
+            case "high" -> 30;
+            case "medium" -> 20;
+            default -> 10;
+        };
 
-        // ---- DURATION ----
-        if ("short".equalsIgnoreCase(t.getDuration())) s += 3;
-        if ("medium".equalsIgnoreCase(t.getDuration())) s += 1;
-        if ("long".equalsIgnoreCase(t.getDuration())) s -= 1;
+        score += switch (t.getDuration()) {
+            case "long" -> 30;
+            case "medium" -> 20;
+            default -> 10;
+        };
 
-        // ---- DEADLINE ----
-        if ("today".equalsIgnoreCase(t.getDeadline())) s += 4;
-        if ("tomorrow".equalsIgnoreCase(t.getDeadline())) s += 2;
+        score += switch (t.getDeadline()) {
+            case "today" -> 40;
+            case "tomorrow" -> 20;
+            default -> 0;
+        };
 
-        // ---- EMOTION MULTIPLIERS ----
+        // ---------------- EMOTION BOOST ----------------
         String emotion = emotionService.getEmotion();
 
-        if ("tired".equalsIgnoreCase(emotion)) {
-            if ("low".equalsIgnoreCase(t.getEnergy())) s += 5;
-            if ("short".equalsIgnoreCase(t.getDuration())) s += 3;
+        if ("tired".equals(emotion)) {
+            if ("low".equals(t.getEnergy())) score += 50;
+            if ("short".equals(t.getDuration())) score += 40;
+            if ("easy".equals(t.getDifficulty())) score += 30;
+            if ("low".equals(t.getPriority()) || "medium".equals(t.getPriority())) score += 10;
         }
 
-        if ("stressed".equalsIgnoreCase(emotion)) {
-            if ("short".equalsIgnoreCase(t.getDuration())) s += 5;
-            if ("easy".equalsIgnoreCase(t.getDifficulty())) s += 3;
+        else if ("overwhelmed".equals(emotion)) {
+            if ("short".equals(t.getDuration())) score += 60;
+            if ("easy".equals(t.getDifficulty())) score += 40;
+            if ("low".equals(t.getEnergy()) || "medium".equals(t.getEnergy())) score += 20;
+            if ("medium".equals(t.getPriority())) score += 10;
         }
 
-        if ("overwhelmed".equalsIgnoreCase(emotion)) {
-            if ("short".equalsIgnoreCase(t.getDuration())) s += 6;
-            if ("low".equalsIgnoreCase(t.getEnergy())) s += 4;
+        else if ("motivated".equals(emotion)) {
+            if ("high".equals(t.getPriority())) score += 60;
+            if ("hard".equals(t.getDifficulty())) score += 40;
+            if ("high".equals(t.getEnergy())) score += 30;
+            if ("long".equals(t.getDuration()) || "medium".equals(t.getDuration())) score += 20;
         }
 
-        if ("motivated".equalsIgnoreCase(emotion)) {
-            if ("high".equalsIgnoreCase(t.getPriority())) s += 6;
-            if ("hard".equalsIgnoreCase(t.getDifficulty())) s += 4;
-        }
-
-        return s;
+        return score;
     }
 }
