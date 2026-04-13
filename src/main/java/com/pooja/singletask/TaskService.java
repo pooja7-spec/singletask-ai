@@ -100,6 +100,15 @@ public class TaskService {
 
             String title = safe(map.get("title"));
 
+            // ---- PREVENT DUPLICATE PENDING TASKS ----
+            boolean exists = tasks.stream()
+                    .anyMatch(t -> t.getTitle().equalsIgnoreCase(title)
+                            && "PENDING".equals(t.getStatus()));
+
+            if (exists) {
+                continue; // skip duplicate pending tasks
+            }
+
             Task task = Task.builder()
                     .id(UUID.randomUUID().toString())
                     .rawText(title)
