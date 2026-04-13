@@ -9,6 +9,13 @@
     input, select { width: 90%; padding: 10px; margin-top: 20px; }
     button { padding: 10px 20px; margin-top: 10px; }
     #current-task { margin-top: 40px; font-size: 22px; }
+    #taskList div {
+      margin: 8px 0;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      text-align: left;
+    }
   </style>
 </head>
 <body>
@@ -36,6 +43,10 @@
   <!-- AI Next Task -->
   <button onclick="loadNextTask()">AI Pick Next Task</button>
 
+  <!-- ALL TASKS SECTION -->
+  <h3 style="margin-top:40px;">All Tasks</h3>
+  <div id="taskList"></div>
+
 <script>
 const API = "https://singletask-ai-1.onrender.com/api/tasks";
 
@@ -60,9 +71,10 @@ async function addTask() {
   });
 
   loadCurrentTask();
+  loadAllTasks();
 }
 
-// ---------------- AI PARSE TASKS (CORRECT ENDPOINT) ----------------
+// ---------------- AI PARSE TASKS ----------------
 async function parseTasks() {
   const text = document.getElementById("taskInput").value;
 
@@ -83,6 +95,7 @@ async function parseTasks() {
   }
 
   loadCurrentTask();
+  loadAllTasks();
 }
 
 // ---------------- CURRENT TASK ----------------
@@ -111,6 +124,7 @@ async function completeTask() {
   });
 
   loadCurrentTask();
+  loadAllTasks();
 }
 
 // ---------------- AI NEXT TASK ----------------
@@ -123,7 +137,36 @@ async function loadNextTask() {
 
   const task = await res.json();
   document.getElementById("current-task").innerText = task.title;
+
+  loadAllTasks();
 }
+
+// ---------------- LOAD ALL TASKS ----------------
+async function loadAllTasks() {
+  const res = await fetch(API);
+  const tasks = await res.json();
+
+  const list = document.getElementById("taskList");
+  list.innerHTML = "";
+
+  tasks.forEach(t => {
+    const div = document.createElement("div");
+    div.innerHTML = `
+      <b>${t.title}</b><br>
+      Status: ${t.status}<br>
+      Priority: ${t.priority}<br>
+      Difficulty: ${t.difficulty}<br>
+      Energy: ${t.energy}<br>
+      Duration: ${t.duration}<br>
+      Deadline: ${t.deadline}
+    `;
+    list.appendChild(div);
+  });
+}
+
+// Load tasks on page load
+loadAllTasks();
+loadCurrentTask();
 </script>
 
 </body>
