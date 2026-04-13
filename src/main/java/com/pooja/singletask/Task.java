@@ -23,4 +23,7 @@ public class Task {
     private String energy;       // low / medium / high
     private String duration;     // short / medium / long
     private String deadline;     // today / tomorrow / date string
+
+    // ---- AI Score (for Focus Mode) ----
+    private int score;  // ⭐ REQUIRED for Today’s Focus Mode
 }

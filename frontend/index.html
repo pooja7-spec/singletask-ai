@@ -9,13 +9,15 @@
     input, select { width: 90%; padding: 10px; margin-top: 20px; }
     button { padding: 10px 20px; margin-top: 10px; }
     #current-task { margin-top: 40px; font-size: 22px; }
-    #taskList div {
+
+    .task-box {
       margin: 8px 0;
       padding: 10px;
       border: 1px solid #ccc;
       border-radius: 6px;
       text-align: left;
     }
+
     .delete-btn {
       background: #ff4d4d;
       color: white;
@@ -24,6 +26,12 @@
       border-radius: 4px;
       cursor: pointer;
       float: right;
+    }
+
+    #focusMode div {
+      margin: 10px 0;
+      padding: 15px;
+      border-radius: 8px;
     }
   </style>
 </head>
@@ -52,12 +60,19 @@
   <!-- AI Next Task -->
   <button onclick="loadNextTask()">AI Pick Next Task</button>
 
+  <!-- Today’s Focus Mode -->
+  <button onclick="loadFocusMode()">Today’s Focus Mode</button>
+  <div id="focusMode"></div>
+
   <!-- CLEAR COMPLETED -->
   <button style="background:#444;color:white;" onclick="clearCompleted()">Clear Completed Tasks</button>
 
-  <!-- ALL TASKS SECTION -->
-  <h3 style="margin-top:40px;">All Tasks</h3>
-  <div id="taskList"></div>
+  <!-- GROUPED TASK LISTS -->
+  <h3 style="margin-top:40px;">Pending Tasks</h3>
+  <div id="pendingList"></div>
+
+  <h3 style="margin-top:40px;">Completed Tasks</h3>
+  <div id="completedList"></div>
 
 <script>
 const API = "https://singletask-ai-1.onrender.com/api/tasks";
@@ -170,16 +185,20 @@ async function clearCompleted() {
   loadCurrentTask();
 }
 
-// ---------------- LOAD ALL TASKS ----------------
+// ---------------- GROUPED TASK LISTS ----------------
 async function loadAllTasks() {
   const res = await fetch(API);
   const tasks = await res.json();
 
-  const list = document.getElementById("taskList");
-  list.innerHTML = "";
+  const pendingList = document.getElementById("pendingList");
+  const completedList = document.getElementById("completedList");
+
+  pendingList.innerHTML = "";
+  completedList.innerHTML = "";
 
   tasks.forEach(t => {
     const div = document.createElement("div");
+    div.className = "task-box";
 
     div.innerHTML = `
       <button class="delete-btn" onclick="deleteTask('${t.id}')">Delete</button>
@@ -192,8 +211,48 @@ async function loadAllTasks() {
       Deadline: ${t.deadline}
     `;
 
-    list.appendChild(div);
+    if (t.status === "PENDING") {
+      pendingList.appendChild(div);
+    } else {
+      completedList.appendChild(div);
+    }
   });
+}
+
+// ---------------- TODAY’S FOCUS MODE ----------------
+async function loadFocusMode() {
+  const res = await fetch(API);
+  const tasks = await res.json();
+
+  const pending = tasks.filter(t => t.status === "PENDING");
+
+  if (pending.length === 0) {
+    document.getElementById("focusMode").innerHTML = "<p>No pending tasks.</p>";
+    return;
+  }
+
+  // Sort by score (backend must send score)
+  pending.sort((a, b) => b.score - a.score);
+
+  const main = pending[0];
+  const backup = pending[1];
+
+  let html = `
+    <h3>Today’s Focus</h3>
+    <div style="border:2px solid #000;">
+      <b>Main Task:</b><br>${main.title}
+    </div>
+  `;
+
+  if (backup) {
+    html += `
+      <div style="border:1px dashed #666;">
+        <b>Backup Task:</b><br>${backup.title}
+      </div>
+    `;
+  }
+
+  document.getElementById("focusMode").innerHTML = html;
 }
 
 // Load tasks on page load

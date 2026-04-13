@@ -123,8 +123,9 @@ public class TaskService {
         emotionService.setEmotion(state);
     }
 
-    // ---------------- GET ALL TASKS ----------------
+    // ---------------- GET ALL TASKS (WITH SCORE) ----------------
     public List<Task> getAllTasks() {
+        tasks.forEach(t -> t.setScore(scoringService.score(t)));
         return tasks;
     }
 
