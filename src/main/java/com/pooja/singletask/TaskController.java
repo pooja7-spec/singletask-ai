@@ -50,6 +50,21 @@ public class TaskController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    // ---------------- DELETE TASK ----------------
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteTask(@PathVariable String id) {
+        boolean removed = taskService.deleteTask(id);
+        return removed ? ResponseEntity.ok(Map.of("deleted", true))
+                       : ResponseEntity.notFound().build();
+    }
+
+    // ---------------- CLEAR COMPLETED ----------------
+    @PostMapping("/clear-completed")
+    public ResponseEntity<?> clearCompleted() {
+        int removed = taskService.clearCompleted();
+        return ResponseEntity.ok(Map.of("removed", removed));
+    }
+
     // ---------------- GET CURRENT TASK ----------------
     @GetMapping("/current")
     public ResponseEntity<Task> getCurrentTask() {

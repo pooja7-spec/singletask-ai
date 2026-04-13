@@ -20,7 +20,6 @@ public class TaskService {
     private final EmotionService emotionService;
     private final TaskScoringService scoringService;
 
-    // ---- SAFE STRING ----
     private String safe(Object o) {
         return o == null ? null : String.valueOf(o);
     }
@@ -29,7 +28,6 @@ public class TaskService {
     private String normalizePriority(String p) {
         if (p == null) return "medium";
         p = p.toLowerCase();
-
         if (p.contains("high") || p.equals("3") || p.equals("4") || p.equals("5")) return "high";
         if (p.contains("low") || p.equals("1")) return "low";
         return "medium";
@@ -38,7 +36,6 @@ public class TaskService {
     private String normalizeDifficulty(String d) {
         if (d == null) return "medium";
         d = d.toLowerCase();
-
         if (d.contains("hard") || d.equals("4") || d.equals("5")) return "hard";
         if (d.contains("easy") || d.equals("1")) return "easy";
         return "medium";
@@ -47,7 +44,6 @@ public class TaskService {
     private String normalizeEnergy(String e) {
         if (e == null) return "medium";
         e = e.toLowerCase();
-
         if (e.contains("high") || e.equals("4") || e.equals("5")) return "high";
         if (e.contains("low") || e.equals("1") || e.equals("2")) return "low";
         return "medium";
@@ -56,14 +52,12 @@ public class TaskService {
     private String normalizeDuration(String d) {
         if (d == null) return "medium";
         d = d.toLowerCase();
-
         try {
             double hours = Double.parseDouble(d);
             if (hours <= 1) return "short";
             if (hours <= 3) return "medium";
             return "long";
         } catch (Exception ignored) {}
-
         if (d.contains("short")) return "short";
         if (d.contains("long")) return "long";
         return "medium";
@@ -72,13 +66,12 @@ public class TaskService {
     private String normalizeDeadline(String d) {
         if (d == null) return "none";
         d = d.toLowerCase();
-
         if (d.contains("today") || d.contains("asap")) return "today";
         if (d.contains("tomorrow") || d.contains("soon") || d.contains("end of month")) return "tomorrow";
         return "none";
     }
 
-    // ---------------- ADD TASK (manual) ----------------
+    // ---------------- ADD TASK ----------------
     public Task addTask(String rawText, String title) {
         Task task = Task.builder()
                 .id(UUID.randomUUID().toString())
@@ -97,17 +90,13 @@ public class TaskService {
         List<Task> created = new ArrayList<>();
 
         for (Map<String, Object> map : parsed) {
-
             String title = safe(map.get("title"));
 
-            // ---- PREVENT DUPLICATE PENDING TASKS ----
+            // Prevent duplicates across ALL statuses
             boolean exists = tasks.stream()
-                    .anyMatch(t -> t.getTitle().equalsIgnoreCase(title)
-                            && "PENDING".equals(t.getStatus()));
+                    .anyMatch(t -> t.getTitle().equalsIgnoreCase(title));
 
-            if (exists) {
-                continue; // skip duplicate pending tasks
-            }
+            if (exists) continue;
 
             Task task = Task.builder()
                     .id(UUID.randomUUID().toString())
@@ -164,5 +153,17 @@ public class TaskService {
                     t.setStatus("DONE");
                     return t;
                 });
+    }
+
+    // ---------------- DELETE TASK ----------------
+    public boolean deleteTask(String id) {
+        return tasks.removeIf(t -> t.getId().equals(id));
+    }
+
+    // ---------------- CLEAR COMPLETED ----------------
+    public int clearCompleted() {
+        int before = tasks.size();
+        tasks.removeIf(t -> "DONE".equals(t.getStatus()));
+        return before - tasks.size();
     }
 }
