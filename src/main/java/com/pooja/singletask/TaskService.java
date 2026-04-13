@@ -20,6 +20,11 @@ public class TaskService {
     private final EmotionService emotionService;
     private final TaskScoringService scoringService;
 
+    // ---- SAFE STRING CONVERSION ----
+    private String safe(Object o) {
+        return o == null ? null : String.valueOf(o);
+    }
+
     // ---------------- ADD TASK (manual) ----------------
     public Task addTask(String rawText, String title) {
         Task task = Task.builder()
@@ -41,13 +46,13 @@ public class TaskService {
         for (Map<String, Object> map : parsed) {
             Task task = Task.builder()
                     .id(UUID.randomUUID().toString())
-                    .rawText((String) map.get("title"))
-                    .title((String) map.get("title"))
-                    .priority((String) map.get("priority"))
-                    .difficulty((String) map.get("difficulty"))
-                    .energy((String) map.get("energy"))
-                    .duration((String) map.get("duration"))
-                    .deadline((String) map.get("deadline"))
+                    .rawText(safe(map.get("title")))
+                    .title(safe(map.get("title")))
+                    .priority(safe(map.get("priority")))
+                    .difficulty(safe(map.get("difficulty")))
+                    .energy(safe(map.get("energy")))
+                    .duration(safe(map.get("duration")))
+                    .deadline(safe(map.get("deadline")))
                     .status("PENDING")
                     .createdAt(Instant.now())
                     .build();
