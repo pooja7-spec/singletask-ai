@@ -75,27 +75,6 @@
       top: 10px;
     }
 
-    .badge {
-      display: inline-block;
-      padding: 3px 8px;
-      border-radius: 6px;
-      font-size: 12px;
-      margin-right: 6px;
-      color: white;
-    }
-
-    .priority-high { background: #e74c3c; }
-    .priority-medium { background: #f1c40f; }
-    .priority-low { background: #2ecc71; }
-
-    .difficulty-hard { background: #8e44ad; }
-    .difficulty-medium { background: #3498db; }
-    .difficulty-easy { background: #1abc9c; }
-
-    .energy-high { background: #ff6b6b; }
-    .energy-medium { background: #ffa502; }
-    .energy-low { background: #2ed573; }
-
     h3 {
       margin-top: 35px;
       color: #0a3d62;
@@ -262,15 +241,8 @@ async function loadAllTasks() {
 
     div.innerHTML = `
       <button class="delete-btn" onclick="deleteTask('${t.id}')">Delete</button>
-      <b>${t.title}</b><br><br>
-
-      <span class="badge priority-${t.priority}">${t.priority}</span>
-      <span class="badge difficulty-${t.difficulty}">${t.difficulty}</span>
-      <span class="badge energy-${t.energy}">${t.energy}</span>
-
-      <br><br>
-      Duration: ${t.duration}<br>
-      Deadline: ${t.deadline}
+      <b>${t.title}</b><br>
+      <span style="font-size:14px;color:#555;">${t.status}</span>
     `;
 
     if (t.status === "PENDING") {
