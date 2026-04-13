@@ -16,6 +16,15 @@
       border-radius: 6px;
       text-align: left;
     }
+    .delete-btn {
+      background: #ff4d4d;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      float: right;
+    }
   </style>
 </head>
 <body>
@@ -43,12 +52,16 @@
   <!-- AI Next Task -->
   <button onclick="loadNextTask()">AI Pick Next Task</button>
 
+  <!-- CLEAR COMPLETED -->
+  <button style="background:#444;color:white;" onclick="clearCompleted()">Clear Completed Tasks</button>
+
   <!-- ALL TASKS SECTION -->
   <h3 style="margin-top:40px;">All Tasks</h3>
   <div id="taskList"></div>
 
 <script>
 const API = "https://singletask-ai-1.onrender.com/api/tasks";
+let currentTaskId = null;
 
 // ---------------- EMOTION ----------------
 async function updateEmotion() {
@@ -60,7 +73,7 @@ async function updateEmotion() {
   });
 }
 
-// ---------------- ADD TASK (manual) ----------------
+// ---------------- ADD TASK ----------------
 async function addTask() {
   const text = document.getElementById("taskInput").value;
 
@@ -104,24 +117,25 @@ async function loadCurrentTask() {
   if (res.status === 204) {
     document.getElementById("current-task").innerText = "No task yet.";
     document.getElementById("completeBtn").disabled = true;
+    currentTaskId = null;
     return;
   }
 
   const task = await res.json();
+  currentTaskId = task.id;
   document.getElementById("current-task").innerText = task.title;
   document.getElementById("completeBtn").disabled = false;
 }
 
 // ---------------- COMPLETE TASK ----------------
 async function completeTask() {
-  const res = await fetch(API + "/current");
-  if (res.status === 204) return;
+  if (!currentTaskId) return;
 
-  const task = await res.json();
-
-  await fetch(API + "/" + task.id + "/complete", {
+  await fetch(API + "/" + currentTaskId + "/complete", {
     method: "POST"
   });
+
+  currentTaskId = null;
 
   loadCurrentTask();
   loadAllTasks();
@@ -136,9 +150,24 @@ async function loadNextTask() {
   }
 
   const task = await res.json();
+  currentTaskId = task.id;
   document.getElementById("current-task").innerText = task.title;
 
   loadAllTasks();
+}
+
+// ---------------- DELETE TASK ----------------
+async function deleteTask(id) {
+  await fetch(API + "/" + id, { method: "DELETE" });
+  loadAllTasks();
+  loadCurrentTask();
+}
+
+// ---------------- CLEAR COMPLETED ----------------
+async function clearCompleted() {
+  await fetch(API + "/clear-completed", { method: "POST" });
+  loadAllTasks();
+  loadCurrentTask();
 }
 
 // ---------------- LOAD ALL TASKS ----------------
@@ -151,7 +180,9 @@ async function loadAllTasks() {
 
   tasks.forEach(t => {
     const div = document.createElement("div");
+
     div.innerHTML = `
+      <button class="delete-btn" onclick="deleteTask('${t.id}')">Delete</button>
       <b>${t.title}</b><br>
       Status: ${t.status}<br>
       Priority: ${t.priority}<br>
@@ -160,6 +191,7 @@ async function loadAllTasks() {
       Duration: ${t.duration}<br>
       Deadline: ${t.deadline}
     `;
+
     list.appendChild(div);
   });
 }
