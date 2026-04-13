@@ -115,10 +115,17 @@
       top: 10px;
     }
 
-    h3 {
+    /* Updated Section Titles with Glass Background */
+    .section-title {
+      font-size: 22px; /* unchanged */
+      padding: 12px;
       margin-top: 35px;
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.45);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
       color: #0a3d62;
-      font-size: 22px;
+      animation: fadeIn 0.5s ease;
     }
   </style>
 </head>
@@ -151,10 +158,10 @@
   <button style="background:#444;color:white;" onclick="clearCompleted()">Clear Completed Tasks</button>
 
   <!-- GROUPED TASK LISTS -->
-  <h3>Pending Tasks</h3>
+  <h3 class="section-title">Pending Tasks</h3>
   <div id="pendingList"></div>
 
-  <h3>Completed Tasks</h3>
+  <h3 class="section-title">Completed Tasks</h3>
   <div id="completedList"></div>
 
 <script>
