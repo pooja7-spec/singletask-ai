@@ -20,9 +20,62 @@ public class TaskService {
     private final EmotionService emotionService;
     private final TaskScoringService scoringService;
 
-    // ---- SAFE STRING CONVERSION ----
+    // ---- SAFE STRING ----
     private String safe(Object o) {
         return o == null ? null : String.valueOf(o);
+    }
+
+    // ---- CATEGORY NORMALIZATION ----
+    private String normalizePriority(String p) {
+        if (p == null) return "medium";
+        p = p.toLowerCase();
+
+        if (p.contains("high") || p.equals("3") || p.equals("4") || p.equals("5")) return "high";
+        if (p.contains("low") || p.equals("1")) return "low";
+        return "medium";
+    }
+
+    private String normalizeDifficulty(String d) {
+        if (d == null) return "medium";
+        d = d.toLowerCase();
+
+        if (d.contains("hard") || d.equals("4") || d.equals("5")) return "hard";
+        if (d.contains("easy") || d.equals("1")) return "easy";
+        return "medium";
+    }
+
+    private String normalizeEnergy(String e) {
+        if (e == null) return "medium";
+        e = e.toLowerCase();
+
+        if (e.contains("high") || e.equals("4") || e.equals("5")) return "high";
+        if (e.contains("low") || e.equals("1") || e.equals("2")) return "low";
+        return "medium";
+    }
+
+    private String normalizeDuration(String d) {
+        if (d == null) return "medium";
+        d = d.toLowerCase();
+
+        try {
+            double hours = Double.parseDouble(d);
+            if (hours <= 1) return "short";
+            if (hours <= 3) return "medium";
+            return "long";
+        } catch (Exception ignored) {}
+
+        if (d.contains("short")) return "short";
+        if (d.contains("long")) return "long";
+        return "medium";
+    }
+
+    private String normalizeDeadline(String d) {
+        if (d == null) return "none";
+        d = d.toLowerCase();
+
+        if (d.contains("today") || d.contains("asap")) return "today";
+        if (d.contains("tomorrow") || d.contains("soon") || d.contains("end of month")) return "tomorrow";
+        return "none";
     }
 
     // ---------------- ADD TASK (manual) ----------------
@@ -44,15 +97,18 @@ public class TaskService {
         List<Task> created = new ArrayList<>();
 
         for (Map<String, Object> map : parsed) {
+
+            String title = safe(map.get("title"));
+
             Task task = Task.builder()
                     .id(UUID.randomUUID().toString())
-                    .rawText(safe(map.get("title")))
-                    .title(safe(map.get("title")))
-                    .priority(safe(map.get("priority")))
-                    .difficulty(safe(map.get("difficulty")))
-                    .energy(safe(map.get("energy")))
-                    .duration(safe(map.get("duration")))
-                    .deadline(safe(map.get("deadline")))
+                    .rawText(title)
+                    .title(title)
+                    .priority(normalizePriority(safe(map.get("priority"))))
+                    .difficulty(normalizeDifficulty(safe(map.get("difficulty"))))
+                    .energy(normalizeEnergy(safe(map.get("energy"))))
+                    .duration(normalizeDuration(safe(map.get("duration"))))
+                    .deadline(normalizeDeadline(safe(map.get("deadline"))))
                     .status("PENDING")
                     .createdAt(Instant.now())
                     .build();

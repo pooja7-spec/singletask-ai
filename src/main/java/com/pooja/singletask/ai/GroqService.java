@@ -23,10 +23,24 @@ public class GroqService {
             request.put("temperature", 0.2);
 
             List<Map<String, String>> messages = new ArrayList<>();
+
+            // ⭐ STRONG SYSTEM PROMPT (forces categories)
             messages.add(Map.of(
                     "role", "system",
-                    "content", "Extract tasks from text. Return ONLY a JSON array. Each task must include: title, priority, difficulty, energy, duration, deadline."
+                    "content",
+                            "You are a task metadata extractor. " +
+                            "Return ONLY a JSON array. " +
+                            "For each task ALWAYS include ALL fields: " +
+                            "title, priority, difficulty, energy, duration, deadline. " +
+                            "Use ONLY these allowed values: " +
+                            "priority = high, medium, low; " +
+                            "difficulty = easy, medium, hard; " +
+                            "energy = low, medium, high; " +
+                            "duration = short, medium, long; " +
+                            "deadline = today, tomorrow, none. " +
+                            "Never return numbers. Never return null. Always infer a category."
             ));
+
             messages.add(Map.of("role", "user", "content", text));
 
             request.put("messages", messages);
