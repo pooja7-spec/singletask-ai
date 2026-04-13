@@ -4,40 +4,109 @@
   <meta charset="UTF-8">
   <title>SingleTask AI</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <style>
-    body { font-family: sans-serif; padding: 20px; text-align: center; }
-    input, select { width: 90%; padding: 10px; margin-top: 20px; }
-    button { padding: 10px 20px; margin-top: 10px; }
-    #current-task { margin-top: 40px; font-size: 22px; }
+    body {
+      font-family: "Inter", sans-serif;
+      padding: 20px;
+      text-align: center;
+      background: linear-gradient(135deg, #d9eaff, #f7faff);
+      min-height: 100vh;
+      color: #1a1a1a;
+    }
+
+    h2 {
+      font-size: 28px;
+      margin-bottom: 10px;
+      color: #0a3d62;
+    }
+
+    input, select {
+      width: 90%;
+      padding: 12px;
+      margin-top: 15px;
+      border-radius: 8px;
+      border: 1px solid #bcd0e7;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin-top: 10px;
+      border-radius: 8px;
+      border: none;
+      background: #0a84ff;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      background: #006edc;
+    }
+
+    #current-task {
+      margin-top: 30px;
+      font-size: 22px;
+      font-weight: bold;
+      color: #0a3d62;
+    }
 
     .task-box {
-      margin: 8px 0;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
+      margin: 10px 0;
+      padding: 15px;
+      border-radius: 10px;
+      background: white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
       text-align: left;
+      position: relative;
     }
 
     .delete-btn {
       background: #ff4d4d;
       color: white;
       border: none;
-      padding: 5px 10px;
-      border-radius: 4px;
+      padding: 6px 10px;
+      border-radius: 6px;
       cursor: pointer;
-      float: right;
+      position: absolute;
+      right: 10px;
+      top: 10px;
     }
 
-    #focusMode div {
-      margin: 10px 0;
-      padding: 15px;
-      border-radius: 8px;
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      margin-right: 6px;
+      color: white;
+    }
+
+    .priority-high { background: #e74c3c; }
+    .priority-medium { background: #f1c40f; }
+    .priority-low { background: #2ecc71; }
+
+    .difficulty-hard { background: #8e44ad; }
+    .difficulty-medium { background: #3498db; }
+    .difficulty-easy { background: #1abc9c; }
+
+    .energy-high { background: #ff6b6b; }
+    .energy-medium { background: #ffa502; }
+    .energy-low { background: #2ed573; }
+
+    h3 {
+      margin-top: 35px;
+      color: #0a3d62;
+      font-size: 22px;
     }
   </style>
 </head>
+
 <body>
 
-  <h2>Focus on One Task</h2>
+  <h2>SingleTask AI</h2>
 
   <!-- Emotional State -->
   <select id="emotionSelect" onchange="updateEmotion()">
@@ -60,18 +129,14 @@
   <!-- AI Next Task -->
   <button onclick="loadNextTask()">AI Pick Next Task</button>
 
-  <!-- Today’s Focus Mode -->
-  <button onclick="loadFocusMode()">Today’s Focus Mode</button>
-  <div id="focusMode"></div>
-
   <!-- CLEAR COMPLETED -->
   <button style="background:#444;color:white;" onclick="clearCompleted()">Clear Completed Tasks</button>
 
   <!-- GROUPED TASK LISTS -->
-  <h3 style="margin-top:40px;">Pending Tasks</h3>
+  <h3>Pending Tasks</h3>
   <div id="pendingList"></div>
 
-  <h3 style="margin-top:40px;">Completed Tasks</h3>
+  <h3>Completed Tasks</h3>
   <div id="completedList"></div>
 
 <script>
@@ -113,8 +178,6 @@ async function parseTasks() {
   });
 
   const raw = await res.text();
-  console.log("RAW RESPONSE:", raw);
-
   try {
     const data = JSON.parse(raw);
     alert("AI created " + data.count + " tasks.");
@@ -146,9 +209,7 @@ async function loadCurrentTask() {
 async function completeTask() {
   if (!currentTaskId) return;
 
-  await fetch(API + "/" + currentTaskId + "/complete", {
-    method: "POST"
-  });
+  await fetch(API + "/" + currentTaskId + "/complete", { method: "POST" });
 
   currentTaskId = null;
 
@@ -202,11 +263,13 @@ async function loadAllTasks() {
 
     div.innerHTML = `
       <button class="delete-btn" onclick="deleteTask('${t.id}')">Delete</button>
-      <b>${t.title}</b><br>
-      Status: ${t.status}<br>
-      Priority: ${t.priority}<br>
-      Difficulty: ${t.difficulty}<br>
-      Energy: ${t.energy}<br>
+      <b>${t.title}</b><br><br>
+
+      <span class="badge priority-${t.priority}">${t.priority}</span>
+      <span class="badge difficulty-${t.difficulty}">${t.difficulty}</span>
+      <span class="badge energy-${t.energy}">${t.energy}</span>
+
+      <br><br>
       Duration: ${t.duration}<br>
       Deadline: ${t.deadline}
     `;
@@ -217,42 +280,6 @@ async function loadAllTasks() {
       completedList.appendChild(div);
     }
   });
-}
-
-// ---------------- TODAY’S FOCUS MODE ----------------
-async function loadFocusMode() {
-  const res = await fetch(API);
-  const tasks = await res.json();
-
-  const pending = tasks.filter(t => t.status === "PENDING");
-
-  if (pending.length === 0) {
-    document.getElementById("focusMode").innerHTML = "<p>No pending tasks.</p>";
-    return;
-  }
-
-  // Sort by score (backend must send score)
-  pending.sort((a, b) => b.score - a.score);
-
-  const main = pending[0];
-  const backup = pending[1];
-
-  let html = `
-    <h3>Today’s Focus</h3>
-    <div style="border:2px solid #000;">
-      <b>Main Task:</b><br>${main.title}
-    </div>
-  `;
-
-  if (backup) {
-    html += `
-      <div style="border:1px dashed #666;">
-        <b>Backup Task:</b><br>${backup.title}
-      </div>
-    `;
-  }
-
-  document.getElementById("focusMode").innerHTML = html;
 }
 
 // Load tasks on page load
